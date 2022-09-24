@@ -1,6 +1,7 @@
 const conteinerCard = document.querySelector('.card-container');
 const inputSearch = document.querySelector('.input-search');
 const formSearch = document.getElementById('form-search');
+const footer = document.querySelector('.footer')
 
 
 
@@ -28,6 +29,10 @@ const typeSearch = (type) => {
             return 'tipo-fight.png'
         case 'poison':
             return 'tipo-poison.png'
+        case 'ground':
+            return 'tipo-tierra.png'
+        case 'dragon':
+            return 'tipo-fuego.png';
     }
 }
 
@@ -55,6 +60,10 @@ const fondoSearch = (type) => {
             return 'card-fight'
         case 'poison':
             return 'card-posion'
+        case 'ground':
+            return 'card-earth'
+        case 'dragon':
+            return 'card-fire';
     }
 }
 
@@ -67,7 +76,7 @@ const weaknessSearch = (t) => {
         case 'water':
             return ['tipo-planta.png', 'tipo-psiq.png', 'tipo-normal.png']
         case 'bug':
-            return ['tipo-fight.png', 'tipo-posion.png', 'tipo-normal.png']
+            return ['tipo-fight.png', 'tipo-poison.png', 'tipo-normal.png']
         case 'normal':
             return ['tipo-insecto.png', 'tipo-fuego.png', 'tipo-normal.png']
         case 'electric':
@@ -82,31 +91,53 @@ const weaknessSearch = (t) => {
             return ['tipo-aire.png', 'tipo-agua.png', 'tipo-normal.png']
         case 'poison':
             return ['tipo-electro.png', 'tipo-agua.png', 'tipo-normal.png']
+        case 'ground':
+            return ['tipo-electro.png', 'tipo-aire.png', 'tipo-normal.png']
+        case 'dragon':
+            return ['tipo-agua.png', 'tipo-tierra.png', 'tipo-normal.png']
+
     }
+
+}
+const showmehability2 = (hability) => {
+    if (!hability) {
+        return " no tiene"
+    } else
+        return hability.effect_entries[1].effect
+}
+const imageViewer = (image) => {
+    if (!image) {
+        return './img/pokeball.png'
+    } else
+        return image
+}
+const showmehability2Name = (hability) => {
+    if (!hability) {
+        return "no tiene"
+    } else
+        return hability.name
 }
 
 
+
 const rendercard = (pokemon, habilidad, habilidad2) => {
-    console.log(pokemon.id)
 
     const weakness = weaknessSearch(pokemon.types[0].type.name);
-    console.log(weakness)
     conteinerCard.classList.replace(conteinerCard.className, fondoSearch(pokemon.types[0].type.name))
     conteinerCard.innerHTML = `
-    
     <div class="card">
     <div class="pokemon-name-hp">
-        <h2 class="name-pokemon">${pokemon.forms[0].name}</h2>
+        <h2 class="name-pokemon">${(pokemon.forms[0].name).toUpperCase()}</h2>
         <div class="pokemon-type">
             <h2 class="hp-pokemon">HP ${(pokemon.height * 7)}</h2>
             <img src="./img/${typeSearch(pokemon.types[0].type.name)}" alt="" class="icon-type">
         </div>
     </div>
     <div class="img-pokemon-container">
-        <img src="${pokemon.sprites.other.dream_world.front_default}" alt="" class="img-pokemon">
+        <img src="${imageViewer(pokemon.sprites.other.dream_world.front_default)}" alt="" class="img-pokemon">
     </div>
     <div class="pokemon-description">
-        <span class="description-first">${pokemon.types[0].type.name} Pokemon</span>
+        <span class="description-first">${(pokemon.types[0].type.name).toUpperCase()} Pokemon</span>
         <span class="power-description"> XP: ${pokemon.base_experience} , Weight: ${pokemon.weight}</span>
     </div>
     <div class="one-ability">
@@ -120,8 +151,8 @@ const rendercard = (pokemon, habilidad, habilidad2) => {
             <img src="./img/${typeSearch(pokemon.types[0].type.name)}" alt="" class="icon-type2">
         </div>
         <div class="ability-box">
-            <span class="name-ability">${pokemon.abilities[1].ability.name}:</span>
-            <span class="description-ability">${habilidad2.effect_entries[1].effect}</span>
+            <span class="name-ability">${showmehability2Name(habilidad2)}:</span>
+            <span class="description-ability">${showmehability2(habilidad2)}</span>
         </div>
 
     </div>
@@ -143,26 +174,59 @@ const rendercard = (pokemon, habilidad, habilidad2) => {
 
 </div>
 </div> `
+    inputSearch.value = '';
 }
+const renderSinpoke = () => {
+    conteinerCard.innerHTML = `
+    
+    <div class="sinpokemon">
+            <h1>No existe el pokemon</h1>
+            <img src="./img/sinpoke.png" alt="">
+        </div>
 
+    `
+}
 
 
 const searchPokemon = async e => {
 
     e.preventDefault();
+
     const idPokemon = inputSearch.value.trim();
+    if (isNaN(idPokemon)) {
+        alert('Debe ingresar un numero')
+        inputSearch.value = '';
+
+        return
+    }
     const fetchPokemon = await requestPoke(idPokemon);
-    const fetchAbility = await requestAbility(fetchPokemon.abilities[0].ability.url);
-    const fetchAbility2 = await requestAbility2(fetchPokemon.abilities[1].ability.url);
-    rendercard(fetchPokemon, fetchAbility, fetchAbility2);
+    if (fetchPokemon) {
+        const fetchAbility = await requestAbility(fetchPokemon.abilities[0].ability.url);
+
+        if ((fetchPokemon.abilities.length) > 1) {
+            const fetchAbility2 = await requestAbility2(fetchPokemon.abilities[1].ability.url);
+            rendercard(fetchPokemon, fetchAbility, fetchAbility2);
+        } else {
+            const sinhabilidad = ''
+            rendercard(fetchPokemon, fetchAbility, sinhabilidad);
+        }
+
+    } else {
+        renderSinpoke()
+        inputSearch.value = '';
+    }
+
+};
 
 
 
-}
+
+
 
 
 
 const init = () => {
+
     formSearch.addEventListener('submit', searchPokemon);
 
 
